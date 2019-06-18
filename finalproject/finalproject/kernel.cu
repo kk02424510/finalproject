@@ -6,28 +6,29 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-uchar blue[700][825];
-uchar green[700][825];
-uchar red[700][825];
-
 int main()
 {
 
 	IplImage* img1 = cvLoadImage("1.jpg");
 	IplImage* img2 = cvLoadImage("2.jpg");
 
-	int i, j, index;
-	int flag = false;
-	int x = 0, y = 0;
+	int i, j, k,a = 0,b = 0, index ,index2;
 	int height, width, step, channels;
+	int height2, width2, step2, channels2;
+	int flag = false ;
+
 	uchar* data1, * data2;
-	
+
 
 	// get the image data
 	height = img1->height;
 	width = img1->width;
 	step = img1->widthStep;
+	height2 = img2->height;
+	width2 = img2->width;
+	step2 = img2->widthStep;
 	channels = img1->nChannels;
+	channels2 = img2->nChannels;
 	data1 = (uchar*)img1->imageData;
 	data2 = (uchar*)img2->imageData;
 
@@ -35,48 +36,45 @@ int main()
 
 
 	// create a window
-	cvNamedWindow("img1", CV_WINDOW_AUTOSIZE);
-	cvNamedWindow("img2", CV_WINDOW_AUTOSIZE);
+	cvNamedWindow("mainWin", CV_WINDOW_AUTOSIZE);
 	cvMoveWindow("mainWin", 100, 100);
 
-	// load rgb
+	// mix the image
 	for (i = 0; i < height; i++)
 	{
-		for (j = 0; j < step; j=j+3)
+		for (j = 0; j < width; j++)
 		{
-			blue[i][(int)(j / 3)] = img1->imageData[i * img1->widthStep + j];
-			green[i][(int)(j / 3)] = img1->imageData[i * img1->widthStep + j + 1];
-			red[i][(int)(j / 3)] = img1->imageData[i * img1->widthStep + j + 2];					
-		}
-	}
+			for (k = 0; k < channels; k++)
+			{
+				index = i * step + j * channels + k;
 
-	for (i = 0; i < height; i++)
-	{
-		for (j = 0; j < step; j = j + 3)
-		{
-			if (blue[i][(int)(j / 3)] < 30 && green[i][(int)(j / 3)] <30 && red[i][(int)(j / 3)] <30)
-			{		
-				if (x < img2->height && y < img2->widthStep)
+				if (k % 3 == 0)
 				{
-					data1[i * img1->widthStep + j] = data2[x * img2->widthStep + y];
-					data1[i * img1->widthStep + j + 1] = data2[x * img2->widthStep + y + 1];
-					data1[i * img1->widthStep + j + 2] = data2[x * img2->widthStep + y + 2];
-					y = y + 3;
-					flag = true;
+					if (data1[index] < 30 && data1[index + 1] < 30 && data1[index + 2] < 30)
+					{	
+						
+						index2 = a * step2 + b * channels2;
+						data1[index] = data2[index2];
+						data1[index+1] = data2[index2+1];
+						data1[index+2] = data2[index2+2];
+						b ++ ;
+						flag = true;
+					}
 				}
-			}
+			}			
+			
 		}
-		if (flag) {
-			y = 0;
-			x = x + 1;
+		if (flag)
+		{
+			b = 0, a++;
 			flag = false;
 		}
+		
+
 	}
 
 	// show the image
-	cvShowImage("img1", img1);
-	cvShowImage("img2", img2);
-
+	cvShowImage("mainWin", img1);
 
 	// wait for a key
 	cvWaitKey(0);
